@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BMI แบบเท่ ๆ</title>
+  <style>
+    :root{
+      --card-w: min(800px, 92vw);
+      --accent: 255, 99, 0;
+      --ok: 46, 204, 113;
+      --warn: 241, 196, 15;
+      --bad: 231, 76, 60;
+    }
+    *{box-sizing: border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:#eaeaf0;
+      min-height:100svh;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(255,255,255,.10), transparent 60%),
+        radial-gradient(1000px 500px at 90% 15%, rgba(255,0,150,.15), transparent 60%),
+        radial-gradient(900px 500px at 30% 90%, rgba(0,200,255,.12), transparent 60%),
+        linear-gradient(120deg, #0b0f1a, #0a0a0f 60%, #0b0f1a);
+      overflow-x:hidden;
+    }
+    .wrap{
+      width:var(--card-w);
+      margin:4rem auto;
+      padding:1.2rem;
+      border-radius:28px;
+      background: rgba(255,255,255,.06);
+      box-shadow:
+        0 20px 60px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .title{
+      display:flex;align-items:center;gap:12px;justify-content:space-between;
+      margin-bottom:1rem
+    }
+    .title h1{
+      margin:0; font-size:clamp(24px, 5vw, 40px);
+      letter-spacing:.6px;
+      text-shadow: 0 0 14px rgba(255,105,180,.45), 0 0 32px rgba(0,200,255,.25);
+    }
+    .badge{
+      padding:.45rem .8rem; border-radius:999px; font-size:.9rem;
+      background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+      color:#d7eaff
+    }
+    .grid{
+      display:grid; gap:16px; grid-template-columns: 1fr; margin-top:1rem
+    }
+    @media (min-width: 820px){ .grid{ grid-template-columns: 1.2fr .8fr } }
+
+    .card{
+      padding:1rem; border-radius:22px; background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    label{ display:block; font-size:.95rem; opacity:.9; margin:10px 0 8px }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:14px }
+    .input{
+      display:flex; align-items:center; gap:10px; width:100%;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px; padding:.85rem 1rem;
+    }
+    .input input{ 
+      all:unset; flex:1; font-size:1.05rem; color:#fff;
+    }
+    .suffix{ opacity:.8; font-size:.95rem }
+
+    .actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap }
+    .btn{
+      padding:.9rem 1.1rem; border-radius:14px; cursor:pointer; border:0;
+      color:#0b0f1a; font-weight:700; letter-spacing:.3px;
+      background: linear-gradient(135deg, #7cf6ff, #ff8fe0);
+      box-shadow: 0 12px 24px rgba(127,255,212,.25), 0 8px 16px rgba(255,143,224,.16);
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter:brightness(1.05) }
+    .btn:active{ transform: translateY(0) scale(.98) }
+    .btn.ghost{
+      background: transparent; color:#e9f1ff; border:1px solid rgba(255,255,255,.18);
+      box-shadow: none
+    }
+
+    .result{
+      display:grid; gap:12px
+    }
+    .big{
+      font-size: clamp(42px, 8vw, 78px); font-weight:800; line-height:1.1;
+      letter-spacing: -1px; margin: .2rem 0 .3rem
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px; padding:.45rem .75rem;
+      border-radius:999px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08); font-weight:600
+    }
+
+    .bar-wrap{ margin-top:.5rem }
+    .scale{ display:flex; justify-content:space-between; font-size:.85rem; opacity:.8 }
+    .bar{
+      position:relative; height:14px; border-radius:999px; overflow:hidden;
+      border:1px solid rgba(255,255,255,.18);
+      background: linear-gradient(90deg,
+        rgba(var(--bad),.9) 0 12.5%,
+        rgba(var(--warn),.95) 12.5% 31.25%,
+        rgba(var(--ok),.95) 31.25% 56.25%,
+        rgba(var(--warn),.95) 56.25% 75%,
+        rgba(var(--bad),.9) 75% 100%
+      );
+      box-shadow: inset 0 0 18px rgba(0,0,0,.35);
+    }
+    .pin{
+      position:absolute; top:-6px; width:2px; height:26px; background:#fff;
+      left:0%; transform: translateX(-50%);
+      box-shadow:0 0 14px rgba(255,255,255,.75);
+    }
+    .legend{ display:flex; gap:10px; flex-wrap:wrap; margin-top:.6rem; font-size:.9rem }
+    .legend span{ display:inline-flex; align-items:center; gap:8px }
+    .dot{ width:12px; height:12px; border-radius:50% }
+    .uw{ background: rgba(var(--warn),.9) }
+    .nw{ background: rgba(var(--ok),.95) }
+    .ow{ background: rgba(var(--warn),.95) }
+    .ob{ background: rgba(var(--bad),.9) }
+
+    .foot{ font-size:.9rem; opacity:.8; margin-top:.6rem }
+    .switch{ display:inline-flex; gap:8px; align-items:center; user-select:none; cursor:pointer }
+    .switch input{ appearance:none; width:42px; height:24px; background:rgba(255,255,255,.18); border-radius:999px; position:relative; outline:none; transition:all .2s }
+    .switch input::after{ content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition: all .2s }
+    .switch input:checked{ background:linear-gradient(135deg, #7cf6ff, #ff8fe0) }
+    .switch input:checked::after{ left:21px }
+    .range-table{ width:100%; border-collapse:collapse; margin-top:.6rem; font-size:.92rem }
+    .range-table th,.range-table td{ padding:.6rem .5rem; border-bottom:1px dashed rgba(255,255,255,.14) }
+    .range-table th{ text-align:left; opacity:.85 }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">
+      <h1>คำนวณดัชนีมวลกาย (BMI)</h1>
+      <span class="badge">HTML • CSS • JS</span>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="row">
+          <div>
+            <label for="weight">น้ำหนัก</label>
+            <div class="input">
+              <input id="weight" type="number" min="1" step="0.1" placeholder="เช่น 70" />
+              <span class="suffix">กก.</span>
+            </div>
+          </div>
+          <div>
+            <label for="height">ส่วนสูง</label>
+            <div class="input">
+              <input id="height" type="number" min="1" step="0.1" placeholder="เช่น 170" />
+              <span class="suffix">ซม.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="calcBtn">คำนวณ</button>
+          <button class="btn ghost" id="resetBtn">รีเซ็ต</button>
+          <label class="switch" title="ใช้เกณฑ์เอเชีย (เอเชียตะวันออกเฉียงใต้)">
+            <input id="asianMode" type="checkbox" />
+            <span>ใช้เกณฑ์เอเชีย</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="card result" aria-live="polite">
+        <div>
+          <div style="opacity:.85">BMI ของคุณ</div>
+          <div class="big" id="bmiValue">—</div>
+          <div class="chip" id="bmiLabel">กรอกข้อมูลเพื่อคำนวณ</div>
+        </div>
+
+        <div class="bar-wrap">
+          <div class="scale"><span>ผอม</span><span>สมส่วน</span><span>ท้วม</span><span>อ้วน</span></div>
+          <div class="bar" id="bar">
+            <div class="pin" id="pin" style="left:0%"></div>
+          </div>
+          <div class="legend">
+            <span><span class="dot uw"></span> ผอม</span>
+            <span><span class="dot nw"></span> สมส่วน</span>
+            <span><span class="dot ow"></span> ท้วม</span>
+            <span><span class="dot ob"></span> อ้วน</span>
+          </div>
+        </div>
+
+        <div class="foot" id="note">ค่า BMI ใช้ประเมินองค์รวม ไม่แทนเปอร์เซ็นต์ไขมันในร่างกาย</div>
+
+        <table class="range-table" id="rangeTable">
+          <thead>
+            <tr><th>หมวดหมู่</th><th>ช่วงค่า BMI</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const $ = (q)=>document.querySelector(q);
+    const weight = $('#weight');
+    const height = $('#height');
+    const calcBtn = $('#calcBtn');
+    const resetBtn = $('#resetBtn');
+    const asianMode = $('#asianMode');
+    const bmiValue = $('#bmiValue');
+    const bmiLabel = $('#bmiLabel');
+    const pin = $('#pin');
+    const rangeTBody = document.querySelector('#rangeTable tbody');
+
+    const RANGES_WHO = [
+      { label:'ผอม', max:18.5 },
+      { label:'สมส่วน', min:18.5, max:24.9 },
+      { label:'ท้วม', min:25, max:29.9 },
+      { label:'อ้วน', min:30 }
+    ];
+    const RANGES_ASIAN = [
+      { label:'ผอม', max:18.5 },
+      { label:'สมส่วน', min:18.5, max:22.9 },
+      { label:'ท้วม', min:23, max:24.9 },
+      { label:'อ้วนระดับ 1', min:25, max:29.9 },
+      { label:'อ้วนระดับ 2', min:30 }
+    ];
+
+    function getRanges(){ return asianMode.checked ? RANGES_ASIAN : RANGES_WHO }
+
+    function renderTable(){
+      rangeTBody.innerHTML = '';
+      for(const r of getRanges()){
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td');
+        const td2 = document.createElement('td');
+        td1.textContent = r.label;
+        let rangeText = '';
+        if(r.min!=null && r.max!=null) rangeText = `${r.min} – ${r.max}`;
+        else if(r.min!=null) rangeText = `≥ ${r.min}`;
+        else rangeText = `< ${r.max}`;
+        td2.textContent = rangeText;
+        tr.appendChild(td1); tr.appendChild(td2);
+        rangeTBody.appendChild(tr);
+      }
+      document.getElementById('note').textContent = asianMode.checked
+        ? 'โหมดเกณฑ์เอเชีย: เกณฑ์สำหรับประชากรเอเชียตะวันออก/ตะวันออกเฉียงใต้'
+        : 'เกณฑ์มาตรฐานองค์การอนามัยโลก (WHO)';
+    }
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    function bmiToPercent(bmi){
+      // map BMI (10–40) to 0–100%
+      const p = (bmi - 10) / 30 * 100;
+      return clamp(p, 0, 100);
+    }
+
+    function categoryOf(bmi){
+      const ranges = getRanges();
+      for(const r of ranges){
+        const min = r.min ?? -Infinity;
+        const max = r.max ?? Infinity;
+        if(bmi >= min && bmi < max) return r.label;
+      }
+      return ranges[ranges.length-1].label;
+    }
+
+    function colorFor(bmi){
+      // return chip color class inline via style
+      if(bmi < 18.5) return 'rgba(241,196,15,.95)';
+      if(!asianMode.checked){
+        if(bmi < 25) return 'rgba(46,204,113,.95)';
+        if(bmi < 30) return 'rgba(241,196,15,.95)';
+        return 'rgba(231,76,60,.95)';
+      } else {
+        if(bmi < 23) return 'rgba(46,204,113,.95)';
+        if(bmi < 25) return 'rgba(241,196,15,.95)';
+        if(bmi < 30) return 'rgba(231,127,60,.95)';
+        return 'rgba(231,76,60,.95)';
+      }
+    }
+
+    function calc(){
+      const w = parseFloat(weight.value);
+      const hcm = parseFloat(height.value);
+      if(!w || !hcm || w <= 0 || hcm <= 0){
+        bmiValue.textContent = '—';
+        bmiLabel.textContent = 'กรอกข้อมูลเพื่อคำนวณ';
+        pin.style.left = '0%';
+        bmiLabel.style.background = 'rgba(255,255,255,.08)';
+        return;
+      }
+      const m = hcm / 100;
+      const bmi = w / (m*m);
+      const out = Math.round(bmi * 10) / 10;
+      bmiValue.textContent = out.toFixed(1);
+      const cat = categoryOf(out);
+      bmiLabel.textContent = cat;
+      bmiLabel.style.background = colorFor(out);
+      pin.style.left = bmiToPercent(out) + '%';
+    }
+
+    calcBtn.addEventListener('click', calc);
+    [weight, height].forEach(el=> el.addEventListener('input', ()=> { /* live feedback */ calc(); }));
+    asianMode.addEventListener('change', ()=>{ renderTable(); calc(); });
+    resetBtn.addEventListener('click', ()=>{
+      weight.value = '';
+      height.value = '';
+      asianMode.checked = false;
+      renderTable();
+      calc();
+      weight.focus();
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
